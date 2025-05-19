@@ -1,5 +1,55 @@
 # .gitignore
+
+
+
+## ---------
+## backend 
+## ---------
 DeutscheBoost_backend/.env
 DeutscheBoost_backend/serviceAccountKey.json
-DeutscheBoost_frontend/node_modules
 DeutscheBoost_backend/__pycache__/
+
+
+
+
+
+
+## ---------
+## frontend 
+## ---------
+
+# dependencies
+DeutscheBoost_frontend/node_modules/
+
+# Expo
+DeutscheBoost_frontend/.expo/
+DeutscheBoost_frontend/dist/
+DeutscheBoost_frontend/web-build/
+DeutscheBoost_frontend/expo-env.d.ts
+
+# Native
+DeutscheBoost_frontend/.kotlin/
+DeutscheBoost_frontend/*.orig.*
+DeutscheBoost_frontend/*.jks
+DeutscheBoost_frontend/*.p8
+DeutscheBoost_frontend/*.p12
+DeutscheBoost_frontend/*.key
+DeutscheBoost_frontend/*.mobileprovision
+
+# Metro
+DeutscheBoost_frontend/.metro-health-check*
+
+# debug
+DeutscheBoost_frontend/npm-debug.*
+DeutscheBoost_frontend/yarn-debug.*
+DeutscheBoost_frontend/yarn-error.*
+
+# macOS
+DeutscheBoost_frontend/.DS_Store
+DeutscheBoost_frontend/*.pem
+
+# local env files
+DeutscheBoost_frontend/.env*.local
+
+# typescript
+DeutscheBoost_frontend/*.tsbuildinfo
