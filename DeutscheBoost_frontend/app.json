@@ -12,6 +12,14 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "androidNavigationBar": {
+      "backgroundColor": "#0e0c0c",
+      "barStyle": "light-content"
+    },
+    "androidStatusBar": {
+      "backgroundColor": "#0e0c0c",
+      "barStyle": "light-content"
+    },
     "ios": {
       "supportsTablet": true
     },
