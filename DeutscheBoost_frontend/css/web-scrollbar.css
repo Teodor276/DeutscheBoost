@@ -1,0 +1,23 @@
+/* Works in Chrome, Edge, Safari, Brave … */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0e0c0c;              /* same deep dark bg */
+}
+
+::-webkit-scrollbar-thumb {
+  background: #334155;              /* dark slate thumb */
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;              /* lighter on hover */
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 #0e0c0c; /* thumb track */
+}

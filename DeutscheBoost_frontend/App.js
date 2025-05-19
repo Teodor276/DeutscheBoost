@@ -9,6 +9,11 @@ import * as NavigationBar from "expo-navigation-bar";
 import TranslateScreen from "./screens/TranslateScreen";
 import HistoryScreen   from "./screens/HistoryScreen";
 import PhrasesScreen   from "./screens/PhrasesScreen";
+import { Platform } from "react-native";
+
+if (Platform.OS === "web") {
+  require("./css/web-scrollbar.css");
+}
 
 const Tab = createBottomTabNavigator();
 const DARK_BG   = "#0e0c0c";   // your slate-black
