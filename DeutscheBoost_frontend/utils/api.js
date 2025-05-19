@@ -1,7 +1,7 @@
 import { Platform } from "react-native";
 import { useAuth } from "./auth";
 
-export const API_URL = "http://192.168.1.9:8000";
+export const API_URL = ""; // replace with ur own 
 
 export function useApi() {
   const { getValidToken } = useAuth();

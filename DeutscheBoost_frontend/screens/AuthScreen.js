@@ -3,6 +3,7 @@ import { View, TextInput, Pressable, Text, StyleSheet } from "react-native";
 import { useAuth } from "../utils/auth";
 
 export default function AuthScreen() {
+
   const { signIn } = useAuth();
   const [email, setEmail]       = useState("");
   const [pw,    setPw]          = useState("");
@@ -10,15 +11,24 @@ export default function AuthScreen() {
   const login = () => signIn(email.trim(), pw, newAcc).catch(e=>alert(e.message));
 
   return (
-    <View style={styles.container}>
+
+    <View style={styles.container}
+    >
       <TextInput style={styles.inp} placeholder="email"  onChangeText={setEmail} value={email}/>
       <TextInput style={styles.inp} placeholder="password" secureTextEntry onChangeText={setPw} value={pw}/>
+
       <Pressable style={styles.btn} onPress={login}>
         <Text style={styles.txt}>{newAcc ? "Create account" : "Sign in"}</Text>
       </Pressable>
-      <Pressable onPress={()=>setNewAcc(!newAcc)}><Text style={styles.link}>
+
+      <Pressable onPress={()=>setNewAcc(!newAcc)}>
+
+      <Text style={styles.link}>
         {newAcc ? "I already have an account" : "I need an account"}
-      </Text></Pressable>
+      </Text>
+      
+      </Pressable>
+      
     </View>
   );
 }

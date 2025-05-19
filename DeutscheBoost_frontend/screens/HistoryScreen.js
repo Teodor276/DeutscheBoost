@@ -14,24 +14,31 @@ import { API_URL, useApi } from "../utils/api";
 /* ---------- helpers ---------- */
 const shuffle = (a) => {
   const arr = [...a];
+
   for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
+
   return arr;
+
 };
+
 const dedup = (arr) => {
+
   const seen = new Set();
+
   return arr.filter((it) => {
     const key = `${it.phrase}|${it.translation}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+
 };
 
 export default function HistoryScreen() {
-  const { fetchWithAuth } = useApi(); // stable helper from AuthProvider
+  const { fetchWithAuth } = useApi();
 
   /* ---------- state ---------- */
   const [lists,   setLists]   = useState([]);
@@ -44,17 +51,19 @@ export default function HistoryScreen() {
   /* ---------- initial load (ONCE) ---------- */
   useEffect(() => {
     refreshLists();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // empty deps → run only once
+  }, []);
 
-  /* ---------- fetch list names ---------- */
   const refreshLists = async () => {
-    if (busy) return;
+    if (busy) 
+      return;
+
     setBusy(true);
+
     try {
       const res   = await fetchWithAuth(`${API_URL}/lists`);
       const json  = await res.json();
       setLists(json.lists ?? []);
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -64,13 +73,16 @@ export default function HistoryScreen() {
 
   /* ---------- open a deck ---------- */
   const openDeck = async (name) => {
+
     try {
       const r   = await fetchWithAuth(`${API_URL}/translations?list=${name}`);
       const arr = await r.json();
+
       setCards(shuffle(dedup(arr)));
       setActive(name);
       setIdx(0);
       setFlip(false);
+
     } catch (err) {
       console.error(err);
     }
@@ -78,7 +90,6 @@ export default function HistoryScreen() {
 
   const current = cards[idx];
 
-  /* ---------- UI ---------- */
   return (
     <View style={[styles.container, { paddingTop: active ? 200 : 40 }]}>
       {/* -------- deck list view -------- */}
@@ -86,6 +97,7 @@ export default function HistoryScreen() {
         <>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Your Flashcard Decks</Text>
+
             <Pressable
               onPress={refreshLists}
               style={styles.reloadBtn}
@@ -96,6 +108,7 @@ export default function HistoryScreen() {
                 size={22}
                 color={busy ? "#64748b" : "#38bdf8"}
               />
+
             </Pressable>
           </View>
 
@@ -109,12 +122,15 @@ export default function HistoryScreen() {
                 <Text style={styles.deckText}>{name}</Text>
               </Pressable>
             ))}
+
             {lists.length === 0 && !busy && (
               <Text style={styles.empty}>
                 No decks yet. Translate a phrase first.
               </Text>
             )}
+
           </ScrollView>
+
         </>
       ) : (
         /* -------- flashcard view -------- */
@@ -171,7 +187,6 @@ export default function HistoryScreen() {
   );
 }
 
-/* ---------- styles ---------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0e0c0c", paddingHorizontal: 16 },
   headerRow: {

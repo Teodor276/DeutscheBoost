@@ -8,7 +8,6 @@ import { Ionicons } from "@expo/vector-icons";
 import * as SystemUI      from "expo-system-ui";
 import * as NavigationBar from "expo-navigation-bar";
 
-/* screens */
 import TranslateScreen       from "./screens/TranslateScreen";
 import HistoryScreen         from "./screens/HistoryScreen";
 import PhrasesHome           from "./screens/PhrasesScreen";
@@ -16,17 +15,14 @@ import AddPhraseScreen       from "./screens/AddPhraseScreen";
 import ReviewPhrasesScreen   from "./screens/ReviewPhrasesScreen";
 import AuthScreen            from "./screens/AuthScreen";
 
-/* auth utilities */
 import { AuthProvider, useAuth } from "./utils/auth";
 
-/* web-only scrollbar styles */
-if (Platform.OS === "web") require("./css/web-scrollbar.css");
+if (Platform.OS === "web")
+   require("./css/web-scrollbar.css");
 
-/* navigation helpers */
 const Tab   = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-/* ------------------- Phrases nested stack ------------------- */
 function PhrasesStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -37,13 +33,11 @@ function PhrasesStack() {
   );
 }
 
-/* ------------------- Colors ------------------- */
 const DARK_BG   = "#0e0c0c";
 const BORDER_BG = "#1f2937";
 const ICON_C    = "#f3f1f1";
 const ICON_INAC = "#94a3b8";
 
-/* ------------------- Auth-gated tabs ------------------- */
 function AuthedTabs() {
   return (
     <Tab.Navigator
@@ -70,17 +64,16 @@ function AuthedTabs() {
   );
 }
 
-/* ------------------- Root router ------------------- */
 function RootRouter() {
   const { idToken, loaded } = useAuth();
-  if (!loaded) return null;                // still restoring from storage
+  if (!loaded) return null;                
   return idToken ? <AuthedTabs /> : <AuthScreen />;
 }
 
-/* ------------------- App component ------------------- */
 export default function App() {
-  /* Android system UI colors */
+  
   useEffect(() => {
+
     SystemUI.setBackgroundColorAsync(DARK_BG);
     NavigationBar.setBackgroundColorAsync(DARK_BG);
     NavigationBar.setButtonStyleAsync("light");

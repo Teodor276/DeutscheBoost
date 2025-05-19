@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import dayjs from "dayjs";
 import { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-const FIRE_KEY = "AIzaSyBTTYpMXqCsOwhpQkRi5OL8JWhDYFKJ750";      
+const FIRE_KEY = "";   // replace with ur own   
 const AUTH_URL = `https://identitytoolkit.googleapis.com/v1`;
 
 const AuthContext = createContext(null);

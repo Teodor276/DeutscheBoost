@@ -4,27 +4,36 @@ import { View, TextInput, Pressable, Text, StyleSheet } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { API_URL, useApi } from "../utils/api";
 
+
 export default function AddPhraseScreen() {
+
   const [phrase, setPhrase]       = useState("");
   const [translation, setTrans]   = useState("");
   const nav                       = useNavigation();
-  const { fetchWithAuth }         = useApi();      // 🔑 always attaches fresh ID-token
+  const { fetchWithAuth }         = useApi();
 
   const save = async () => {
-    if (!phrase.trim() || !translation.trim()) return;
+    if (!phrase.trim() || !translation.trim()) 
+      return;
+
     try {
+
       await fetchWithAuth(`${API_URL}/phrases`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phrase, translation }),
       });
+
       nav.goBack();
+
     } catch {
+
       alert("Error saving phrase");
     }
   };
 
   return (
+    
     <View style={styles.container}>
       {/* back button */}
       <Pressable onPress={() => nav.goBack()} style={styles.back}>
@@ -38,6 +47,7 @@ export default function AddPhraseScreen() {
         value={phrase}
         onChangeText={setPhrase}
       />
+
       <TextInput
         style={styles.input}
         placeholder="English translation"
@@ -49,7 +59,9 @@ export default function AddPhraseScreen() {
       <Pressable style={styles.btn} onPress={save}>
         <Text style={styles.btnTxt}>Save</Text>
       </Pressable>
+
     </View>
+    
   );
 }
 

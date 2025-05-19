@@ -125,7 +125,6 @@ export default function TranslateScreen() {
   );
 }
 
-/* ------------- styles ------------- */
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#0e0c0c" },
   container: { flex: 1, paddingHorizontal: 18, paddingTop: 40, gap: 12 },

@@ -11,13 +11,14 @@ import {
 import { useNavigation } from "@react-navigation/native";
 import { API_URL, useApi } from "../utils/api";
 
-/* -------- shuffle helper -------- */
 const shuffle = (arr) => {
   const a = [...arr];
+
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
+
   return a;
 };
 
@@ -29,12 +30,13 @@ export default function ReviewPhrasesScreen() {
   const [index, setIndex] = useState(0);
   const [flip,  setFlip ] = useState(false);
 
-  /* load & shuffle once */
   useEffect(() => {
+
     fetchWithAuth(`${API_URL}/phrases`)
       .then(r => r.json())
       .then(d => { setCards(shuffle(d)); setIndex(0); setFlip(false); })
       .catch(console.error);
+
   }, []);
 
   const current = cards[index];
@@ -79,7 +81,6 @@ export default function ReviewPhrasesScreen() {
   );
 }
 
-/* -------- styles -------- */
 const styles = StyleSheet.create({
   container:{ flex:1, backgroundColor:"#0e0c0c", padding:16, alignItems:"center", paddingTop:250 },
   back:{ alignSelf:"flex-start", marginBottom:12 },

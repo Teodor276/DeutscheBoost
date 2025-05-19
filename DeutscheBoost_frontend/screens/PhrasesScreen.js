@@ -7,7 +7,7 @@ import { useAuth } from "../utils/auth";
 
 export default function PhrasesHome() {
   const nav         = useNavigation();
-  const { signOut } = useAuth();          // 🔑 log-out helper
+  const { signOut } = useAuth();       
 
   return (
     <View style={styles.container}>
@@ -35,7 +35,6 @@ export default function PhrasesHome() {
   );
 }
 
-/* ---------- styles ---------- */
 const styles = StyleSheet.create({
   container:{
     flex:1,
@@ -45,7 +44,6 @@ const styles = StyleSheet.create({
     gap:18,
   },
 
-  /* floating sign-out in corner */
   logout:{
     position:"absolute",
     top:40,
@@ -56,7 +54,6 @@ const styles = StyleSheet.create({
   },
   logoutTxt:{ color:"#94a3b8", fontSize:14 },
 
-  /* action buttons */
   btn:{ width:200, paddingVertical:14, borderRadius:9999, alignItems:"center" },
   add:{    backgroundColor:"#2563eb" },
   review:{ backgroundColor:"#38bdf8" },
