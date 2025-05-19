@@ -11,6 +11,26 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { API_URL, useAuthToken } from "../utils/api";
 
+/* -------- helpers -------- */
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+
+const deduplicate = (arr) => {
+  const seen = new Set();
+  return arr.filter((item) => {
+    const key = `${item.phrase}|${item.translation}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+};
+
 export default function HistoryScreen() {
   const token = useAuthToken();
 
@@ -38,8 +58,15 @@ export default function HistoryScreen() {
     fetch(`${API_URL}/translations?list=${name}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(r  => r.json())
-      .then(d  => { setCards(d); setActive(name); setIndex(0); setFlipped(false); })
+      .then(r => r.json())
+      .then((d) => {
+        const unique   = deduplicate(d);
+        const shuffled = shuffle(unique);    // 💥 shuffled & deduped
+        setCards(shuffled);
+        setActive(name);
+        setIndex(0);
+        setFlipped(false);
+      })
       .catch(console.error);
   };
 
@@ -49,7 +76,7 @@ export default function HistoryScreen() {
     <View
       style={[
         styles.container,
-        { paddingTop: active ? 200 : 40 }
+        { paddingTop: active ? 200 : 40 }   // keep sensible spacing
       ]}
     >
       {/* ---------- Deck list screen ---------- */}
@@ -72,7 +99,11 @@ export default function HistoryScreen() {
 
           <ScrollView>
             {lists.map((name) => (
-              <Pressable key={name} style={styles.deck} onPress={() => loadDeck(name)}>
+              <Pressable
+                key={name}
+                style={styles.deck}
+                onPress={() => loadDeck(name)}
+              >
                 <Text style={styles.deckText}>{name}</Text>
               </Pressable>
             ))}
@@ -91,7 +122,6 @@ export default function HistoryScreen() {
             disabled={!current}
             onPress={() => setFlipped(!flipped)}
           >
-            {/* scrollable text inside the card */}
             <ScrollView contentContainerStyle={styles.cardScroll}>
               <Text style={styles.cardText}>
                 {current
@@ -101,7 +131,6 @@ export default function HistoryScreen() {
             </ScrollView>
           </TouchableOpacity>
 
-          {/* arrows */}
           <View style={styles.nav}>
             <Pressable
               onPress={() => { setIndex(i => Math.max(i - 1, 0)); setFlipped(false); }}
@@ -133,41 +162,25 @@ export default function HistoryScreen() {
 
 /* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#0e0c0c",
-    paddingHorizontal: 16,
-  },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  reloadBtn: { padding: 6 },
-  title: { fontSize: 22, fontWeight: "600", color: "#f8fafc" },
+  container: { flex: 1, backgroundColor: "#0e0c0c", paddingHorizontal: 16 },
+  headerRow: { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginBottom:12 },
+  reloadBtn: { padding:6 },
+  title: { fontSize:22, fontWeight:"600", color:"#f8fafc" },
 
-  deck:  { padding: 12, backgroundColor: "#1e2530", borderRadius: 8, marginBottom: 8 },
-  deckText: { color: "#f1f5f9", fontSize: 18 },
-  empty: { color: "#64748b", marginTop: 20, textAlign: "center" },
+  deck:      { padding:12, backgroundColor:"#1e2530", borderRadius:8, marginBottom:8 },
+  deckText:  { color:"#f1f5f9", fontSize:18 },
+  empty:     { color:"#64748b", marginTop:20, textAlign:"center" },
 
-  flash: { flex: 1, alignItems: "center" },
-  deckTitle: { color: "#94a3b8", fontSize: 16, marginBottom: 10 },
+  flash: { flex:1, alignItems:"center" },
+  deckTitle:{ color:"#94a3b8", fontSize:16, marginBottom:10 },
 
-  /* card with inner scroll */
-  card: {
-    backgroundColor: "#1e293b",
-    borderRadius: 12,
-    marginVertical: 20,
-    width: "100%",
-    maxHeight: "55%",        // prevents taking whole screen
-  },
-  cardScroll: { flexGrow: 1, justifyContent: "center", alignItems: "center" },
-  cardText: { color: "#38bdf8", fontSize: 24, fontWeight: "600", textAlign: "center", padding: 20 },
+  card:{ backgroundColor:"#1e293b", borderRadius:12, marginVertical:20, width:"100%", maxHeight:"55%" },
+  cardScroll:{ flexGrow:1, justifyContent:"center", alignItems:"center" },
+  cardText:{ color:"#38bdf8", fontSize:24, fontWeight:"600", textAlign:"center", padding:20 },
 
-  nav: { flexDirection: "row", alignItems: "center", gap: 20, marginTop: 10 },
-  arrow: { padding: 10 },
-  arrowText: { color: "#f8fafc", fontSize: 24 },
-  counter: { color: "#cbd5e1", fontSize: 16 },
-  back: { marginTop: 20, color: "#94a3b8" },
+  nav:{ flexDirection:"row", alignItems:"center", gap:20, marginTop:10 },
+  arrow:{ padding:10 },
+  arrowText:{ color:"#f8fafc", fontSize:24 },
+  counter:{ color:"#cbd5e1", fontSize:16 },
+  back:{ marginTop:20, color:"#94a3b8" },
 });

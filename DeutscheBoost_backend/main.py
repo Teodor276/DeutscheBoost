@@ -1,6 +1,9 @@
 # main.py – FastAPI backend (auth-aware)
 # --------------------------------------------------
 
+# -----------------------------------------------------------------------------
+# uvicorn main:app --host 0.0.0.0 --port 8000
+# -----------------------------------------------------------------------------
 import os
 from fastapi import FastAPI, Request, HTTPException, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
@@ -119,6 +122,39 @@ async def delete_translation(doc_id: str, uid: str = Depends(get_current_uid)):
     db.collection("users").document(uid).collection("translations").document(doc_id).delete()
     return {"status": "deleted"}
 
-# -----------------------------------------------------------------------------
-# uvicorn main:app --host 0.0.0.0 --port 8000
-# -----------------------------------------------------------------------------
+
+# -------------------- PHRASES (stand-alone) --------------------------
+
+@app.post("/phrases")
+async def add_phrase(request: Request, uid: str = Depends(get_current_uid)):
+    """
+    Add a custom phrase (no auto-translation).
+    Body: {"phrase":"Guten Morgen","translation":"Good morning"}
+    """
+    data = await request.json()
+    phrase       = data.get("phrase", "").strip()
+    translation  = data.get("translation", "").strip()
+
+    if not phrase or not translation:
+        raise HTTPException(status_code=400, detail="phrase & translation required")
+
+    doc_ref = (
+        db.collection("users")
+          .document(uid)
+          .collection("phrases")
+          .add({"phrase": phrase, "translation": translation})
+    )
+    return {"id": doc_ref[1].id, "phrase": phrase, "translation": translation}
+
+
+@app.get("/phrases")
+async def list_phrases(uid: str = Depends(get_current_uid)):
+    """Return ALL user-added phrases (for review)."""
+    docs = db.collection("users").document(uid).collection("phrases").stream()
+    return [{"id": d.id, **d.to_dict()} for d in docs]
+
+
+@app.delete("/phrases/{doc_id}")
+async def delete_phrase(doc_id: str, uid: str = Depends(get_current_uid)):
+    db.collection("users").document(uid).collection("phrases").document(doc_id).delete()
+    return {"status": "deleted"}
