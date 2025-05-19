@@ -1,0 +1,5 @@
+# .gitignore
+DeutscheBoost_backend/.env
+DeutscheBoost_backend/serviceAccountKey.json
+DeutscheBoost_frontend/node_modules
+DeutscheBoost_backend/__pycache__/
