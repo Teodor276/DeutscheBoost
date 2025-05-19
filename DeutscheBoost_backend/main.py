@@ -21,7 +21,7 @@ except ImportError:
 
 # -------- ENV ----------------------------------------------------------------
 FIREBASE_CRED_PATH = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "serviceAccountKey.json")
-DEEPL_API_KEY      = os.getenv("DEEPL_API_KEY")      # optional
+DEEPL_API_KEY      = os.getenv("DEEPL_API_KEY")
 
 cred = credentials.Certificate(FIREBASE_CRED_PATH)
 firebase_admin.initialize_app(cred)
@@ -50,7 +50,7 @@ app = FastAPI(title="German Learner API with Auth")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # keep open for dev; tighten in prod
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -70,14 +70,12 @@ async def translate_phrase(request: Request,
     if not phrase:
         raise HTTPException(status_code=400, detail="phrase field is required")
 
-    # translate via DeepL or dummy
     if translator:
         res = translator.translate_text(phrase, target_lang="EN-US", source_lang="DE")
         translation = res.text
     else:
         translation = f"{phrase}_EN"
 
-    # Firestore path: users/{uid}/translations
     doc_ref = (
         db.collection("users")
           .document(uid)
@@ -122,8 +120,6 @@ async def delete_translation(doc_id: str, uid: str = Depends(get_current_uid)):
     db.collection("users").document(uid).collection("translations").document(doc_id).delete()
     return {"status": "deleted"}
 
-
-# -------------------- PHRASES (stand-alone) --------------------------
 
 @app.post("/phrases")
 async def add_phrase(request: Request, uid: str = Depends(get_current_uid)):

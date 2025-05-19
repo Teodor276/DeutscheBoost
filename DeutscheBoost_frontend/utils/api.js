@@ -1,7 +1,19 @@
 import { Platform } from "react-native";
+import { useAuth } from "./auth";
 
-export const API_URL = "http://192.168.1.9:8000"; // for mobile
+export const API_URL = "http://192.168.1.9:8000";
 
+export function useApi() {
+  const { getValidToken } = useAuth();
 
-// Temporary: hard-coded token while no login screen
-export const useAuthToken = () => "eyJhbGciOiJSUzI1NiIsImtpZCI6IjY3ZDhjZWU0ZTYwYmYwMzYxNmM1ODg4NTJiMjA5MTZkNjRjMzRmYmEiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL3NlY3VyZXRva2VuLmdvb2dsZS5jb20vZGV1dHNjaGVib29zdC1kMTM2MyIsImF1ZCI6ImRldXRzY2hlYm9vc3QtZDEzNjMiLCJhdXRoX3RpbWUiOjE3NDc2NTcwNjYsInVzZXJfaWQiOiJrS2Q4U2JVZ29GUkdQblg4OTY4ZUFPOHFTbWoxIiwic3ViIjoia0tkOFNiVWdvRlJHUG5YODk2OGVBTzhxU21qMSIsImlhdCI6MTc0NzY1NzA2NiwiZXhwIjoxNzQ3NjYwNjY2LCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwiZW1haWxfdmVyaWZpZWQiOmZhbHNlLCJmaXJlYmFzZSI6eyJpZGVudGl0aWVzIjp7ImVtYWlsIjpbInRlc3R1c2VyQGV4YW1wbGUuY29tIl19LCJzaWduX2luX3Byb3ZpZGVyIjoicGFzc3dvcmQifX0.RazoCB-CZfD5BWkSjKZ-RWLIgut7ZeIdYpQ5PjXeuvFkkjSeO3mcoblqUmP8ZHsVq84nqnGZVbrZ2TN-H3ixL0pK1ZHkibADwstsUJZjuVkJ6MEZm7Z3EUDgUDynCtTTzWKKMcOcleZvjTJBykf_wiWA1rvrBUFnczyiqBA_vQMLH9r-RFkRxV_Z3usEvSysKDypCGt4dMMYaMIIvO0Bq3HBbF05bSWinZcqwlw5BWy_Vft6BG_HNZ4K1I-GUjNBpf2snLGmGWqFhi4LOrha8oaERL261MdMxwFXSzMhsVxg-ArQVqzvq4WpLAvODWvqTH9p5SDXZpN_9oVuF-mAew";
+  const fetchWithAuth = async (url, opts = {}) => {
+    const idToken = await getValidToken();
+    const headers = {
+      ...(opts.headers || {}),
+      Authorization: `Bearer ${idToken}`,
+    };
+    return fetch(url, { ...opts, headers });
+  };
+
+  return { fetchWithAuth };
+}

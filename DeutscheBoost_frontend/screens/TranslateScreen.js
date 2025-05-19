@@ -1,5 +1,5 @@
 // DeutscheBoost_frontend/screens/TranslateScreen.js
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   SafeAreaView,
   View,
@@ -8,37 +8,32 @@ import {
   Text,
   StyleSheet,
   StatusBar,
+  Platform,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import { API_URL, useAuthToken } from "../utils/api";
-import { Platform } from "react-native";
-
+import { API_URL, useApi } from "../utils/api";
 
 export default function TranslateScreen() {
-  /* -------------------- state -------------------- */
-  const [text, setText] = useState("");
-  const [listsCount, setListsCount] = useState(0);
-  const [listNo, setListNo] = useState("");
-  const [selection, setSelection] = useState({ start: 0, end: 0 });
-  const [latest, setLatest] = useState(null); // {phrase, translation}
-  const token = useAuthToken();
+  /* ------------- state ------------- */
+  const [text, setText]           = useState("");
+  const [listsCount, setLists]    = useState(0);
+  const [listNo, setListNo]       = useState("");
+  const [selection, setSel]       = useState({ start: 0, end: 0 });
+  const [latest, setLatest]       = useState(null); // { phrase, translation }
+  const { fetchWithAuth }         = useApi();
 
-  /* -------------------- effects ------------------ */
+  /* ------------- fetch list count ------------- */
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch(`${API_URL}/lists`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setListsCount(data.lists.length);
-        }
-      } catch (_) {}
+        const res   = await fetchWithAuth(`${API_URL}/lists`);
+        const data  = await res.json();
+        setLists(data.lists?.length ?? 0);
+      } catch {}
     })();
   }, []);
 
-  /* -------------------- handlers ----------------- */
+  /* ------------- handlers ------------- */
   const handlePaste = async () => {
     const clip = await Clipboard.getStringAsync();
     if (clip) setText(clip);
@@ -46,26 +41,18 @@ export default function TranslateScreen() {
 
   const handleSelectionChange = (e) => {
     const sel = e.nativeEvent.selection;
-    if (sel.start !== sel.end) setSelection(sel);
+    if (sel.start !== sel.end) setSel(sel);
   };
 
   const handleTranslate = async () => {
-    if (!listNo.trim()) {
-      alert("Enter a list number first.");
-      return;
-    }
+    if (!listNo.trim()) return alert("Enter a list number first.");
     const phrase = text.substring(selection.start, selection.end).trim();
-    if (!phrase) {
-      alert("Highlight text first, then press Translate.");
-      return;
-    }
+    if (!phrase)      return alert("Highlight text first, then Translate.");
+
     try {
-      const res = await fetch(`${API_URL}/translate_phrase`, {
+      const res = await fetchWithAuth(`${API_URL}/translate_phrase`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ phrase, list: `list_${listNo}` }),
       });
       const data = await res.json();
@@ -76,12 +63,12 @@ export default function TranslateScreen() {
     }
   };
 
-  /* -------------------- render ------------------- */
+  /* ------------- render ------------- */
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar barStyle="light-content" />
       <View style={styles.container}>
-        {/* Lists info + input */}
+        {/* deck counter + input */}
         <View style={styles.infoRow}>
           <Text style={styles.infoText}>Lists: {listsCount}</Text>
           <TextInput
@@ -94,19 +81,19 @@ export default function TranslateScreen() {
           />
         </View>
 
-        {/* Main textarea */}
+        {/* main text area */}
         <TextInput
           style={styles.input}
           multiline
-          value={text}
           placeholder="Paste German text, highlight, then Translate…"
           placeholderTextColor="#64748b"
+          value={text}
           onChangeText={setText}
           selectionColor="#38bdf8"
           onSelectionChange={handleSelectionChange}
         />
 
-        {/* Result card */}
+        {/* result card */}
         {latest && (
           <View style={styles.card}>
             <Text style={styles.cardPhrase}>{latest.phrase}</Text>
@@ -115,16 +102,20 @@ export default function TranslateScreen() {
           </View>
         )}
 
-        {/* Button row */}
+        {/* buttons */}
         <View style={styles.buttonsRow}>
           <Pressable style={styles.btn} onPress={handlePaste}>
             <Text style={styles.btnTxt}>Paste</Text>
           </Pressable>
 
           <Pressable
-            style={[styles.btn, styles.btnAccent, (!text.trim() || !listNo.trim()) && { opacity: 0.35 }]}
-            onPress={handleTranslate}
+            style={[
+              styles.btn,
+              styles.btnAccent,
+              (!text.trim() || !listNo.trim()) && { opacity: 0.35 },
+            ]}
             disabled={!text.trim() || !listNo.trim()}
+            onPress={handleTranslate}
           >
             <Text style={styles.btnTxt}>Translate</Text>
           </Pressable>
@@ -134,23 +125,11 @@ export default function TranslateScreen() {
   );
 }
 
-/* -------------------- styles ------------------ */
+/* ------------- styles ------------- */
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#0e0c0c", // deep dark
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 18,
-    paddingTop: 40,
-    gap: 12,
-  },
-  infoRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
+  safeArea: { flex: 1, backgroundColor: "#0e0c0c" },
+  container: { flex: 1, paddingHorizontal: 18, paddingTop: 40, gap: 12 },
+  infoRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   infoText: { color: "#e2e8f0", fontWeight: "500" },
   listInput: {
     borderColor: "#334155",
@@ -164,11 +143,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#1e2530",
   },
   input: {
-  height: Platform.select({
-    web: 420,
-    ios: 260,
-    android: 260,
-  }),
+    height: Platform.select({ web: 420, ios: 260, android: 260 }),
     borderColor: "#334155",
     borderWidth: 1.2,
     borderRadius: 10,
@@ -194,11 +169,7 @@ const styles = StyleSheet.create({
   cardPhrase: { color: "#f8fafc", fontWeight: "600" },
   cardArrow: { color: "#f8fafc", marginHorizontal: 6, fontWeight: "700" },
   cardTranslation: { color: "#38bdf8", fontWeight: "600" },
-  buttonsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 14,
-  },
+  buttonsRow: { flexDirection: "row", justifyContent: "center", gap: 14 },
   btn: {
     backgroundColor: "#334155",
     paddingVertical: 10,

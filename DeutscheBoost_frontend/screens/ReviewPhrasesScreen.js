@@ -9,36 +9,31 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
-import { API_URL, useAuthToken } from "../utils/api";
+import { API_URL, useApi } from "../utils/api";
 
-/* -------- Fisher-Yates shuffle helper -------- */
-function shuffle(arr) {
+/* -------- shuffle helper -------- */
+const shuffle = (arr) => {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
-}
+};
 
 export default function ReviewPhrasesScreen() {
-  const token = useAuthToken();
-  const nav   = useNavigation();
+  const nav              = useNavigation();
+  const { fetchWithAuth} = useApi();
 
   const [cards, setCards] = useState([]);
   const [index, setIndex] = useState(0);
-  const [flip,  setFlip]  = useState(false);
+  const [flip,  setFlip ] = useState(false);
 
+  /* load & shuffle once */
   useEffect(() => {
-    fetch(`${API_URL}/phrases`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    fetchWithAuth(`${API_URL}/phrases`)
       .then(r => r.json())
-      .then(d => {
-        setCards(shuffle(d));   // 👈 shuffled once per entry
-        setIndex(0);
-        setFlip(false);
-      })
+      .then(d => { setCards(shuffle(d)); setIndex(0); setFlip(false); })
       .catch(console.error);
   }, []);
 
@@ -46,12 +41,12 @@ export default function ReviewPhrasesScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Back button */}
+      {/* back */}
       <Pressable onPress={() => nav.goBack()} style={styles.back}>
         <Text style={styles.backText}>← Back</Text>
       </Pressable>
 
-      {/* Flashcard */}
+      {/* flash-card */}
       <TouchableOpacity
         style={styles.card}
         disabled={!current}
@@ -60,17 +55,15 @@ export default function ReviewPhrasesScreen() {
         <ScrollView contentContainerStyle={styles.cardInner}>
           <Text style={styles.cardTxt}>
             {current
-              ? flip ? current.phrase : current.translation
+              ? (flip ? current.phrase : current.translation)
               : "No phrases yet"}
           </Text>
         </ScrollView>
       </TouchableOpacity>
 
-      {/* Navigation arrows */}
+      {/* arrows */}
       <View style={styles.nav}>
-        <Pressable
-          onPress={() => { setIndex(i => Math.max(i - 1, 0)); setFlip(false); }}
-        >
+        <Pressable onPress={() => { setIndex(i => Math.max(i - 1, 0)); setFlip(false); }}>
           <Text style={styles.arrow}>←</Text>
         </Pressable>
 
@@ -78,9 +71,7 @@ export default function ReviewPhrasesScreen() {
           {cards.length ? `${index + 1}/${cards.length}` : "0/0"}
         </Text>
 
-        <Pressable
-          onPress={() => { setIndex(i => Math.min(i + 1, cards.length - 1)); setFlip(false); }}
-        >
+        <Pressable onPress={() => { setIndex(i => Math.min(i + 1, cards.length - 1)); setFlip(false); }}>
           <Text style={styles.arrow}>→</Text>
         </Pressable>
       </View>
@@ -88,6 +79,7 @@ export default function ReviewPhrasesScreen() {
   );
 }
 
+/* -------- styles -------- */
 const styles = StyleSheet.create({
   container:{ flex:1, backgroundColor:"#0e0c0c", padding:16, alignItems:"center", paddingTop:250 },
   back:{ alignSelf:"flex-start", marginBottom:12 },

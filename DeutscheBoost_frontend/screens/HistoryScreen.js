@@ -1,5 +1,5 @@
 // DeutscheBoost_frontend/screens/HistoryScreen.js
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,22 +9,21 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { API_URL, useAuthToken } from "../utils/api";
+import { API_URL, useApi } from "../utils/api";
 
-/* -------- helpers -------- */
-const shuffle = (arr) => {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
+/* ---------- helpers ---------- */
+const shuffle = (a) => {
+  const arr = [...a];
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return a;
+  return arr;
 };
-
-const deduplicate = (arr) => {
+const dedup = (arr) => {
   const seen = new Set();
-  return arr.filter((item) => {
-    const key = `${item.phrase}|${item.translation}`;
+  return arr.filter((it) => {
+    const key = `${it.phrase}|${it.translation}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -32,67 +31,70 @@ const deduplicate = (arr) => {
 };
 
 export default function HistoryScreen() {
-  const token = useAuthToken();
+  const { fetchWithAuth } = useApi(); // stable helper from AuthProvider
 
+  /* ---------- state ---------- */
   const [lists,   setLists]   = useState([]);
   const [active,  setActive]  = useState(null);
   const [cards,   setCards]   = useState([]);
-  const [index,   setIndex]   = useState(0);
-  const [flipped, setFlipped] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [idx,     setIdx]     = useState(0);
+  const [flip,    setFlip]    = useState(false);
+  const [busy,    setBusy]    = useState(false);
 
-  /* fetch deck names */
-  const fetchLists = useCallback(() => {
-    setLoading(true);
-    fetch(`${API_URL}/lists`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.json())
-      .then(d => setLists(d.lists ?? []))
-      .catch(console.error)
-      .finally(() => setLoading(false));
-  }, [token]);
+  /* ---------- initial load (ONCE) ---------- */
+  useEffect(() => {
+    refreshLists();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // empty deps → run only once
 
-  useEffect(fetchLists, [fetchLists]);
-
-  /* load a single deck */
-  const loadDeck = (name) => {
-    fetch(`${API_URL}/translations?list=${name}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then(r => r.json())
-      .then((d) => {
-        const unique   = deduplicate(d);
-        const shuffled = shuffle(unique);    // 💥 shuffled & deduped
-        setCards(shuffled);
-        setActive(name);
-        setIndex(0);
-        setFlipped(false);
-      })
-      .catch(console.error);
+  /* ---------- fetch list names ---------- */
+  const refreshLists = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const res   = await fetchWithAuth(`${API_URL}/lists`);
+      const json  = await res.json();
+      setLists(json.lists ?? []);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const current = cards[index];
+  /* ---------- open a deck ---------- */
+  const openDeck = async (name) => {
+    try {
+      const r   = await fetchWithAuth(`${API_URL}/translations?list=${name}`);
+      const arr = await r.json();
+      setCards(shuffle(dedup(arr)));
+      setActive(name);
+      setIdx(0);
+      setFlip(false);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
+  const current = cards[idx];
+
+  /* ---------- UI ---------- */
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingTop: active ? 200 : 40 }   // keep sensible spacing
-      ]}
-    >
-      {/* ---------- Deck list screen ---------- */}
+    <View style={[styles.container, { paddingTop: active ? 200 : 40 }]}>
+      {/* -------- deck list view -------- */}
       {!active ? (
         <>
           <View style={styles.headerRow}>
             <Text style={styles.title}>Your Flashcard Decks</Text>
             <Pressable
-              onPress={fetchLists}
+              onPress={refreshLists}
               style={styles.reloadBtn}
-              disabled={loading}
+              disabled={busy}
             >
               <Ionicons
                 name="refresh"
                 size={22}
-                color={loading ? "#64748b" : "#38bdf8"}
+                color={busy ? "#64748b" : "#38bdf8"}
               />
             </Pressable>
           </View>
@@ -102,52 +104,61 @@ export default function HistoryScreen() {
               <Pressable
                 key={name}
                 style={styles.deck}
-                onPress={() => loadDeck(name)}
+                onPress={() => openDeck(name)}
               >
                 <Text style={styles.deckText}>{name}</Text>
               </Pressable>
             ))}
-            {lists.length === 0 && !loading && (
-              <Text style={styles.empty}>No decks yet. Translate a phrase first.</Text>
+            {lists.length === 0 && !busy && (
+              <Text style={styles.empty}>
+                No decks yet. Translate a phrase first.
+              </Text>
             )}
           </ScrollView>
         </>
       ) : (
-      /* ----------- Flashcard screen ----------- */
+        /* -------- flashcard view -------- */
         <View style={styles.flash}>
           <Text style={styles.deckTitle}>Deck: {active}</Text>
 
           <TouchableOpacity
             style={styles.card}
             disabled={!current}
-            onPress={() => setFlipped(!flipped)}
+            onPress={() => setFlip(!flip)}
           >
             <ScrollView contentContainerStyle={styles.cardScroll}>
               <Text style={styles.cardText}>
                 {current
-                  ? flipped ? current.phrase : current.translation
+                  ? flip
+                    ? current.phrase
+                    : current.translation
                   : "Empty deck"}
               </Text>
             </ScrollView>
           </TouchableOpacity>
 
+          {/* nav arrows */}
           <View style={styles.nav}>
             <Pressable
-              onPress={() => { setIndex(i => Math.max(i - 1, 0)); setFlipped(false); }}
-              style={styles.arrow}
+              onPress={() => {
+                setIdx((i) => Math.max(i - 1, 0));
+                setFlip(false);
+              }}
             >
-              <Text style={styles.arrowText}>←</Text>
+              <Text style={styles.arrow}>←</Text>
             </Pressable>
 
             <Text style={styles.counter}>
-              {cards.length ? `${index + 1}/${cards.length}` : "0/0"}
+              {cards.length ? `${idx + 1}/${cards.length}` : "0/0"}
             </Text>
 
             <Pressable
-              onPress={() => { setIndex(i => Math.min(i + 1, cards.length - 1)); setFlipped(false); }}
-              style={styles.arrow}
+              onPress={() => {
+                setIdx((i) => Math.min(i + 1, cards.length - 1));
+                setFlip(false);
+              }}
             >
-              <Text style={styles.arrowText}>→</Text>
+              <Text style={styles.arrow}>→</Text>
             </Pressable>
           </View>
 
@@ -160,27 +171,47 @@ export default function HistoryScreen() {
   );
 }
 
-/* ---------------- STYLES ---------------- */
+/* ---------- styles ---------- */
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#0e0c0c", paddingHorizontal: 16 },
-  headerRow: { flexDirection:"row", alignItems:"center", justifyContent:"space-between", marginBottom:12 },
-  reloadBtn: { padding:6 },
-  title: { fontSize:22, fontWeight:"600", color:"#f8fafc" },
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  reloadBtn: { padding: 6 },
+  title: { fontSize: 22, fontWeight: "600", color: "#f8fafc" },
 
-  deck:      { padding:12, backgroundColor:"#1e2530", borderRadius:8, marginBottom:8 },
-  deckText:  { color:"#f1f5f9", fontSize:18 },
-  empty:     { color:"#64748b", marginTop:20, textAlign:"center" },
+  deck: {
+    padding: 12,
+    backgroundColor: "#1e2530",
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  deckText: { color: "#f1f5f9", fontSize: 18 },
+  empty: { color: "#64748b", marginTop: 20, textAlign: "center" },
 
-  flash: { flex:1, alignItems:"center" },
-  deckTitle:{ color:"#94a3b8", fontSize:16, marginBottom:10 },
+  flash: { flex: 1, alignItems: "center" },
+  deckTitle: { color: "#94a3b8", fontSize: 16, marginBottom: 10 },
 
-  card:{ backgroundColor:"#1e293b", borderRadius:12, marginVertical:20, width:"100%", maxHeight:"55%" },
-  cardScroll:{ flexGrow:1, justifyContent:"center", alignItems:"center" },
-  cardText:{ color:"#38bdf8", fontSize:24, fontWeight:"600", textAlign:"center", padding:20 },
+  card: {
+    backgroundColor: "#1e293b",
+    borderRadius: 12,
+    marginVertical: 20,
+    width: "100%",
+    maxHeight: "55%",
+  },
+  cardScroll: { flexGrow: 1, justifyContent: "center", alignItems: "center", padding: 24 },
+  cardText: {
+    color: "#38bdf8",
+    fontSize: 24,
+    fontWeight: "600",
+    textAlign: "center",
+  },
 
-  nav:{ flexDirection:"row", alignItems:"center", gap:20, marginTop:10 },
-  arrow:{ padding:10 },
-  arrowText:{ color:"#f8fafc", fontSize:24 },
-  counter:{ color:"#cbd5e1", fontSize:16 },
-  back:{ marginTop:20, color:"#94a3b8" },
+  nav: { flexDirection: "row", alignItems: "center", gap: 20, marginTop: 10 },
+  arrow: { color: "#f8fafc", fontSize: 28 },
+  counter: { color: "#cbd5e1", fontSize: 16 },
+  back: { marginTop: 20, color: "#94a3b8" },
 });
