@@ -9,6 +9,8 @@
 - 🔗 Web App: [https://deutscheboost.onrender.com](https://deutscheboost.onrender.com)
 - 📱 Android APK: [Download DeutscheBoost APK](https://www.dropbox.com/scl/fi/b66ckv8gq1a4055fns3hv/deutsche_boost.apk?rlkey=gnvmnjz1ukyt4f9th4mc4i8ra&st=hif8qboq&dl=1)
 
+Please note that the backend may take a few moments to initialize after a request, as it is hosted on Render’s free tier which includes cold start delays.
+
 ---
 
 ## 📱 Features Overview
